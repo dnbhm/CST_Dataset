@@ -6,9 +6,12 @@ import cst.interface
 from cst.interface import Project
 import cst.results
 import numpy as np
+import pandas as pd
+
+File = 'Start_5.cst'   #Имя проекта
 
 mycst = cst.interface.DesignEnvironment()
-mycst1 = cst.interface.DesignEnvironment.open_project(mycst, r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\Start_5.cst')  # Поменять путь к проекту CST
+mycst1 = cst.interface.DesignEnvironment.open_project(mycst, r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\' + str(File))  # Поменять путь к проекту CST
 
 ''' #Изменение Parameter list
 par_change = 'Sub Main () \nStoreParameter("W3_1", 2.4)\nStoreParameter("S3_1",2)' \
@@ -67,11 +70,29 @@ par_opt_start = 'Sub Main ()' \
 mycst1.schematic.execute_vba_code(par_opt_start, timeout=None)
 
 cst.interface.DesignEnvironment.close(mycst)
-project = cst.results.ProjectFile(r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\Start_5.cst')
-S11 = project.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
-res = np.array(S11.get_ydata())
-print(res)
 
+mycst = cst.interface.DesignEnvironment()
+resultFile = cst.results.ProjectFile(r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\' +str(File), allow_interactive=True)
+
+#project = cst.results.ProjectFile( r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\Start_5.cst')
+S11 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
+S12 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S1,2")
+S21 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S2,1")
+S22 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S2,2")
+
+res_filename = File + '_' + str(a_1) + '_' + str(b_1)
+
+csv_headers = ['S11_y', 'S11_x', 'S12_y', 'S12_x', 'S21_y', 'S21_x', 'S22_y', 'S22_x']
+
+
+
+#Parameters schematic
+res_fileparam = 'param_' + res_filename
+schematic = resultFile.get_schematic()
+schematic.get_all_run_ids()
+r = pd.DataFrame(data = list(schematic.get_parameter_combination(0).items()), columns = ['Name','Values'])
+r.set_index('Name', inplace=True)
+r.to_csv(res_fileparam, mode='a', header=True, index=True, encoding='utf-8')
 
 
 
