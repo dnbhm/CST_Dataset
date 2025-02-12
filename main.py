@@ -8,7 +8,7 @@ import cst.results
 import numpy as np
 import pandas as pd
 
-File = 'Start_5.cst'   #Имя проекта
+File = 'Start_6.cst'   #Имя проекта
 
 mycst = cst.interface.DesignEnvironment()
 mycst1 = cst.interface.DesignEnvironment.open_project(mycst, r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\' + str(File))  # Поменять путь к проекту CST
@@ -31,68 +31,83 @@ a_str, b_str = input_str.split(',') if ',' in input_str else input_str.split()
 a_2 = float(a_str)
 b_2 = float(b_str.strip())
 
-par_opt_1 = 'Sub Main () \n Optimizer.DeleteAllGoals \n Dim goalID As Long \n goalID = Optimizer.AddGoal("1DC Primary Result")' \
-            '\n  Optimizer.SelectParameter ("L1", True)' \
-            '\n  Optimizer.SelectParameter ("L2", True)' \
-            '\n  Optimizer.SelectParameter ("L3", True)' \
-            '\n  Optimizer.SelectParameter ("L11", True)' \
-            '\n  Optimizer.SelectParameter ("S1_1", True)' \
-            '\n  Optimizer.SelectParameter ("S2_1", True)' \
-            '\n  Optimizer.SelectParameter ("S3_1", True)' \
-            '\n  Optimizer.SelectParameter ("W1_1", True)' \
-            '\n  Optimizer.SelectParameter ("W2_1", True)' \
-            '\n  Optimizer.SelectParameter ("W3_1", True)' \
-            '\n  Optimizer.SelectGoal (goalID, True)' \
-            '\n  Optimizer.SetGoal1DCResultName(".\S-Parameters\S1,1")' \
-            '\n  Optimizer.SetGoalTarget (-20)' \
-            '\n  Optimizer.SetGoalWeight (1.0)' \
-            '\n  Optimizer.SetGoalRangeType ("range")' \
-            '\n  Optimizer.SetGoalRange (' + str(a_1) + ', ' + str(b_1) + ')' \
-                                                                          '\nEnd Sub'
 
-par_opt_2 = 'Sub Main () \n Dim goalID As Long \n goalID = Optimizer.AddGoal("1DC Primary Result")' \
-            '\n  Optimizer.SelectGoal (goalID, True)' \
-            '\n  Optimizer.SetGoal1DCResultName(".\S-Parameters\S2,1")' \
-            '\n  Optimizer.SetGoalTarget (-45)' \
-            '\n  Optimizer.SetGoalWeight (1.0)' \
-            '\n  Optimizer.SetGoalRangeType ("range")' \
-            '\n  Optimizer.SetGoalRange (' + str(a_2) + ', ' + str(b_2) + ')' \
-                                                                          '\nEnd Sub'
-
-mycst1.schematic.execute_vba_code(par_opt_1, timeout=None)
-mycst1.schematic.execute_vba_code(par_opt_2, timeout=None)
-
-mycst1.modeler.run_solver()
-
-par_opt_start = 'Sub Main ()' \
-                '\n  Optimizer.Start' \
+def optim(a_1, b_1, a_2, b_2):
+    par_opt_1 = 'Sub Main () \n Optimizer.DeleteAllGoals \n Dim goalID As Long \n goalID = Optimizer.AddGoal("1DC Primary Result")' \
+                '\n  Optimizer.SelectParameter ("L1", True)' \
+                '\n  Optimizer.SelectParameter ("L2", True)' \
+                '\n  Optimizer.SelectParameter ("L3", True)' \
+                '\n  Optimizer.SelectParameter ("L11", True)' \
+                '\n  Optimizer.SelectParameter ("S1_1", True)' \
+                '\n  Optimizer.SelectParameter ("S2_1", True)' \
+                '\n  Optimizer.SelectParameter ("S3_1", True)' \
+                '\n  Optimizer.SelectParameter ("W1_1", True)' \
+                '\n  Optimizer.SelectParameter ("W2_1", True)' \
+                '\n  Optimizer.SelectParameter ("W3_1", True)' \
+                '\n  Optimizer.SelectGoal (goalID, True)' \
+                '\n  Optimizer.SetGoal1DCResultName(".\S-Parameters\S1,1")' \
+                '\n  Optimizer.SetGoalTarget (-20)' \
+                '\n  Optimizer.SetGoalWeight (1.0)' \
+                '\n  Optimizer.SetGoalRangeType ("range")' \
+                '\n  Optimizer.SetGoalRange (' + str(a_1) + ', ' + str(b_1) + ')' \
                 '\nEnd Sub'
-mycst1.schematic.execute_vba_code(par_opt_start, timeout=None)
+    par_opt_2 = 'Sub Main () \n Dim goalID As Long \n goalID = Optimizer.AddGoal("1DC Primary Result")' \
+                '\n  Optimizer.SelectGoal (goalID, True)' \
+                '\n  Optimizer.SetGoal1DCResultName(".\S-Parameters\S2,1")' \
+                '\n  Optimizer.SetGoalTarget (-45)' \
+                '\n  Optimizer.SetGoalWeight (1.0)' \
+                '\n  Optimizer.SetGoalRangeType ("range")' \
+                '\n  Optimizer.SetGoalRange (' + str(a_2) + ', ' + str(b_2) + ')' \
+                '\nEnd Sub'
 
-cst.interface.DesignEnvironment.close(mycst)
+    mycst1.schematic.execute_vba_code(par_opt_1, timeout=None)
+    mycst1.schematic.execute_vba_code(par_opt_2, timeout=None)
 
-mycst = cst.interface.DesignEnvironment()
-resultFile = cst.results.ProjectFile(r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\' +str(File), allow_interactive=True)
+    #mycst1.modeler.run_solver()
 
-#project = cst.results.ProjectFile( r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\Start_5.cst')
-S11 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
-S12 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S1,2")
-S21 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S2,1")
-S22 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S2,2")
+    par_opt_start = 'Sub Main ()' \
+                    '\n  Optimizer.Start' \
+                    '\nEnd Sub'
+    #mycst1.schematic.execute_vba_code(par_opt_start, timeout=None)
 
-res_filename = File + '_' + str(a_1) + '_' + str(b_1)
+    cst.interface.DesignEnvironment.close(mycst)
 
-csv_headers = ['S11_y', 'S11_x', 'S12_y', 'S12_x', 'S21_y', 'S21_x', 'S22_y', 'S22_x']
+    #mycst = cst.interface.DesignEnvironment()
+    resultFile = cst.results.ProjectFile(r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\' +str(File), allow_interactive=True)
 
+    #project = cst.results.ProjectFile( r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\Start_5.cst')
+    S11 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
+    S12 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S1,2")
+    S21 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S2,1")
+    S22 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S2,2")
+    print(S11.get_xdata())
+    print(S11.get_ydata())
 
+    res_filename = File + '_' + str(a_1) + '_' + str(b_1)
 
-#Parameters schematic
-res_fileparam = 'param_' + res_filename
-schematic = resultFile.get_schematic()
-schematic.get_all_run_ids()
-r = pd.DataFrame(data = list(schematic.get_parameter_combination(0).items()), columns = ['Name','Values'])
-r.set_index('Name', inplace=True)
-r.to_csv(res_fileparam, mode='a', header=True, index=True, encoding='utf-8')
+    csv_headers = ['S11_y', 'S11_x', 'S12_y', 'S12_x', 'S21_y', 'S21_x', 'S22_y', 'S22_x']
+
+    #Parameters schematic
+    res_fileparam = 'param_' + res_filename
+    schematic = resultFile.get_schematic()
+    schematic.get_all_run_ids()
+    r = pd.DataFrame(data = list(schematic.get_parameter_combination(0).items()), columns = ['Name','Values'])
+    r.set_index('Name', inplace=True)
+    r.to_csv(res_fileparam, mode='a', header=True, index=True, encoding='utf-8')
+    return 'good'
+
+#solv(MIN Первой цели, MAX Первой цели, отступ Второй цели, ШАГ,  Размер окна)
+def solv(a1, b1, c2, step_1, wind):
+    for i in np.arange(a1, b1, step_1):
+        min_1 = i - i*wind
+        max_1 = i + i*wind
+        min_2 = i + c2 - (i + c2)*wind
+        max_2 = i + 2*c2 - (i + 2*c2)*wind
+        print('Step', int(i))
+        optim(min_1, max_1, min_2, max_2)
+
+#solv(1, 1.2 , 0.1, 0.1, 0.1)
+optim(1, 1.1, 1.1, 1.2)
 
 
 
