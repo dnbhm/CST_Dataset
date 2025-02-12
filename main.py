@@ -13,7 +13,7 @@ File = 'Start_6.cst'   #Имя проекта
 mycst = cst.interface.DesignEnvironment()
 mycst1 = cst.interface.DesignEnvironment.open_project(mycst, r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\' + str(File))  # Поменять путь к проекту CST
 
-''' #Изменение Parameter list
+''' #Изменение Parameter list------------------------------------------------------------------------------
 par_change = 'Sub Main () \nStoreParameter("W3_1", 2.4)\nStoreParameter("S3_1",2)' \
              '\nRebuildOnParametricChange (bfullRebuild, bShowErrorMsgBox)' \
              '\nStoreParameter("L3", 3)' \
@@ -30,6 +30,18 @@ input_str = input('Values for the S-2,1 range (e.g., 1.5,2.5 or 1.5 2.5): ')
 a_str, b_str = input_str.split(',') if ',' in input_str else input_str.split()
 a_2 = float(a_str)
 b_2 = float(b_str.strip())
+
+def save_S_P(s1, s2, s3, s4, s5, s6, s7, s8, name_f):
+
+    s = [s1, s2, s3, s4, s5, s6, s7, s8]
+    try:
+        with open(name_f, 'w', encoding='utf-8') as file:
+            for s_1 in s:
+                mm = ','.join(map(str, s_1))
+                file.write(mm + '\n\n\n\n\n\n\n')
+        print(f"S-Parameters have been successfully saved to a file: {name_f}")
+    except Exception as e:
+        print(f"An error occurred when writing to a file: {e}")
 
 
 def optim(a_1, b_1, a_2, b_2):
@@ -75,19 +87,28 @@ def optim(a_1, b_1, a_2, b_2):
     #mycst = cst.interface.DesignEnvironment()
     resultFile = cst.results.ProjectFile(r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\' +str(File), allow_interactive=True)
 
+    #S-Parameters schematic------------------------------------------------------------------------------
     #project = cst.results.ProjectFile( r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\Start_5.cst')
     S11 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
     S12 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S1,2")
     S21 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S2,1")
     S22 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S2,2")
-    print(S11.get_xdata())
-    print(S11.get_ydata())
-
+    #print(S11.get_xdata())
+    #print(S11.get_ydata())
+    S11_y = S11.get_ydata()
+    S11_x = S11.get_xdata()
+    S12_y = S12.get_ydata()
+    S12_x = S12.get_xdata()
+    S21_y = S21.get_ydata()
+    S21_x = S21.get_xdata()
+    S22_y = S22.get_ydata()
+    S22_x = S22.get_xdata()
     res_filename = File + '_' + str(a_1) + '_' + str(b_1)
 
-    csv_headers = ['S11_y', 'S11_x', 'S12_y', 'S12_x', 'S21_y', 'S21_x', 'S22_y', 'S22_x']
+    #txt_headers = ['S11_y', 'S11_x', 'S12_y', 'S12_x', 'S21_y', 'S21_x', 'S22_y', 'S22_x']
+    save_S_P(S11_y, S11_x, S12_y, S12_x, S21_y, S21_x, S22_y, S22_x, res_filename)
 
-    #Parameters schematic
+    #Parameters schematic------------------------------------------------------------------------------
     res_fileparam = 'param_' + res_filename
     schematic = resultFile.get_schematic()
     schematic.get_all_run_ids()
@@ -107,7 +128,7 @@ def solv(a1, b1, c2, step_1, wind):
         optim(min_1, max_1, min_2, max_2)
 
 #solv(1, 1.2 , 0.1, 0.1, 0.1)
-optim(1, 1.1, 1.1, 1.2)
+###optim(1, 1.1, 1.1, 1.2)
 
 
 
