@@ -7,6 +7,7 @@ from cst.interface import Project
 import cst.results
 import numpy as np
 import pandas as pd
+import csv
 
 File = 'Start_6.cst'   #Имя проекта
 
@@ -43,6 +44,22 @@ def save_S_P(s1, s2, s3, s4, s5, s6, s7, s8, name_f):
     except Exception as e:
         print(f"An error occurred when writing to a file: {e}")
 
+def write_to_csv(filename, name_project, a, b, data_list, name_2):
+    file_exists = False
+    try:
+        with open(filename, 'r'):  # Проверяем, существует ли файл
+            file_exists = True
+    except FileNotFoundError:
+        pass  # Файл не существует, будет создан
+    with open(filename, 'a', newline='') as csvfile:  # Открываем файл в режиме дозаписи
+        writer = csv.writer(csvfile,quoting=csv.QUOTE_NONE, escapechar=' ')
+
+        if not file_exists:
+            # Если файл только что создан, пишем заголовки
+            writer.writerow(['Filter topology', 'Frequency start (Ghz)', 'Frequency end (Ghz)', 'H (millimetre)' , 'HH (millimetre)' , 'L1 (millimetre)', 'L11 (millimetre)', 'L2 (millimetre)', 'L3 (millimetre)', 'Lp (millimetre)', 'Ls (millimetre)', 'Rgnd (millimetre)', 'Rp (millimetre)', 'S1_1 (millimetre)', 'S2_1 (millimetre)', 'S3_1 (millimetre)', 'T (millimetre)', 'W1_1 (millimetre)', 'W2_1 (millimetre)', 'W3_1 (millimetre)', 'Wp (millimetre)', 'The path to the S-parameters file'])
+        rounded_list = map(lambda x: round(x, 3), data_list)
+        stringified_list = map(str, rounded_list)
+        writer.writerow([name_project, a, b, ','.join(stringified_list), name_2])  # Записываем данные
 
 def optim(a_1, b_1, a_2, b_2):
     par_opt_1 = 'Sub Main () \n Optimizer.DeleteAllGoals \n Dim goalID As Long \n goalID = Optimizer.AddGoal("1DC Primary Result")' \
@@ -80,7 +97,7 @@ def optim(a_1, b_1, a_2, b_2):
     par_opt_start = 'Sub Main ()' \
                     '\n  Optimizer.Start' \
                     '\nEnd Sub'
-    #mycst1.schematic.execute_vba_code(par_opt_start, timeout=None)
+    mycst1.schematic.execute_vba_code(par_opt_start, timeout=None)
 
     cst.interface.DesignEnvironment.close(mycst)
 
@@ -115,6 +132,8 @@ def optim(a_1, b_1, a_2, b_2):
     r = pd.DataFrame(data = list(schematic.get_parameter_combination(0).items()), columns = ['Name','Values'])
     r.set_index('Name', inplace=True)
     r.to_csv(res_fileparam, mode='a', header=True, index=True, encoding='utf-8')
+
+    write_to_csv(File[:-4] + '.csv', File[:-4], str(a_1) , str(b_1), list(schematic.get_parameter_combination(0).values()), os.path.abspath(res_filename))
     return 'good'
 
 #solv(MIN Первой цели, MAX Первой цели, отступ Второй цели, ШАГ,  Размер окна)
@@ -128,7 +147,7 @@ def solv(a1, b1, c2, step_1, wind):
         optim(min_1, max_1, min_2, max_2)
 
 #solv(1, 1.2 , 0.1, 0.1, 0.1)
-###optim(1, 1.1, 1.1, 1.2)
+optim(1.1, 1.2, 1.2, 1.3)
 
 
 
