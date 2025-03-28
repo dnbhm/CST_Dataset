@@ -8,8 +8,11 @@ import cst.results
 import numpy as np
 import pandas as pd
 import csv
+from datetime import datetime
 
 File = 'Topology_1.cst'   #Имя проекта
+
+
 topology = int(File.split('.')[0].split('_')[1])
 
 ''' #Изменение Parameter list------------------------------------------------------------------------------
@@ -42,7 +45,7 @@ def write_to_csv(filename, name_project, a, b, db_1, a_2, b_2, db_2, a_3, b_3, d
         writer = csv.writer(csvfile,quoting=csv.QUOTE_NONE, escapechar=' ')
 
         if not file_exists:
-            writer.writerow(['Name project', 'Filter topology',
+            writer.writerow(['Name project', 'Current datetime', 'Filter topology',
                              'Frequency start (Ghz)', 'Frequency end (Ghz)',
                              'Frequency start_2 (Ghz)', 'Frequency end_2 (Ghz)',
                              'Frequency start_3 (Ghz)', 'Frequency end_3 (Ghz)',
@@ -54,11 +57,10 @@ def write_to_csv(filename, name_project, a, b, db_1, a_2, b_2, db_2, a_3, b_3, d
                              'W1_1 (millimetre)', 'W2_1 (millimetre)', 'W3_1 (millimetre)', 'Wp (millimetre)',
                              'The path to the S-parameters file', 'The path to the file'])
         rounded_list = map(lambda x: round(x, 3), data_list)
-        stringified_list = map(str, rounded_list)
-        writer.writerow([name_project,name_project.split('.')[0], a, b, a_2, b_2, a_3, b_3, db_1, db_2, db_3, ','.join(stringified_list), name_2, name_1])
+        list1 = map(str, rounded_list)
+        writer.writerow([name_project, datetime.now(),name_project.split('.')[0], a, b, a_2, b_2, a_3, b_3, db_1, db_2, db_3, ','.join(list1), name_2, name_1])
 
-def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, a_3 = '-', b_3 = '-', db_3 = '-'):
-
+def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, i, a_3 = '-', b_3 = '-', db_3 = '-'):
     par_opt_1 = 'Sub Main () \n Optimizer.DeleteAllGoals \n Dim goalID As Long \n goalID = Optimizer.AddGoal("1DC Primary Result")' \
                 '\n  Optimizer.SelectParameter ("L1", True)' \
                 '\n  Optimizer.SelectParameter ("L2", True)' \
@@ -76,6 +78,7 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, a_3 = '-', b_3 = '-', db_3 = '
                 '\n  Optimizer.SetGoalWeight (1.0)' \
                 '\n  Optimizer.SetGoalRangeType ("range")' \
                 '\n  Optimizer.SetGoalRange (' + str(a_1) + ', ' + str(b_1) + ')' \
+                '\n  Optimizer.SetAndUpdateMinMaxAuto (' + str(i) + ')' \
                 '\nEnd Sub'
     par_opt_2 = 'Sub Main () \n Dim goalID As Long \n goalID = Optimizer.AddGoal("1DC Primary Result")' \
                 '\n  Optimizer.SelectGoal (goalID, True)' \
@@ -99,12 +102,12 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, a_3 = '-', b_3 = '-', db_3 = '
         '\nEnd Sub'
         mycst1.schematic.execute_vba_code(par_opt_3, timeout=None)
 
-    ###mycst1.modeler.run_solver()
+    mycst1.modeler.run_solver()
 
     par_opt_start = 'Sub Main ()' \
                     '\n  Optimizer.Start' \
                     '\nEnd Sub'
-    ###mycst1.schematic.execute_vba_code(par_opt_start, timeout=None)
+    mycst1.schematic.execute_vba_code(par_opt_start, timeout=None)
     resultFile = cst.results.ProjectFile(r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\' +str(File), allow_interactive=True)
 
     #S-Parameters schematic------------------------------------------------------------------------------
@@ -134,18 +137,13 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, a_3 = '-', b_3 = '-', db_3 = '
     r.set_index('Name', inplace=True)
 
     write_to_csv(File[:-6] + '.csv', File, str(a_1) , str(b_1), str(db_1), str(a_2), str(b_2), str(db_2), str(a_3), str(b_3), str(db_3), list(schematic.get_parameter_combination(0).values()), os.path.abspath(res_filename), os.path.abspath(File))
+    print("Update CVS file")
     return 'good'
 
 #New
-A = float(input('Целевая частота: '))
-B = float(input('Конечная частота: '))
-F1 = float(input('Процент полосы пропускания (10): '))
-F2 = float(input('Процент полосы заграждения (10): '))
-Ch = float(input('Отступ (12): '))
-Step = float(input('Шаг: '))
-number = (B - A)/Step
-print(A, B, F1, F2, Ch, Step)
-def Solve(A, B, F1, F2, Ch, Step):
+
+def Solve(A, B, F1, F2, F3, Ch, Ch_2, Step, db_1, db_2, db_3):
+    update = 10  # скорость обновления ограничений физ параметров
     mycst = cst.interface.DesignEnvironment()
     mycst1 = cst.interface.DesignEnvironment.open_project(mycst, r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\' + str(File))  # Поменять путь к проекту CST
     while (B - A):
@@ -153,14 +151,38 @@ def Solve(A, B, F1, F2, Ch, Step):
         b_1 = A + A * F1/100 * 0.5
         a_2 = A - A * F2 / 100 * 0.5 + A * Ch/100
         b_2 = A + A * F2 / 100 * 0.5 + A * Ch/100
-        optim(mycst1, a_1, b_1, 30, a_2, b_2, 30)
+        if topology == 3:
+            a_3 = A - A * F3 / 100 * 0.5 - A * Ch_2/100
+            b_3 = A + A * F2 / 100 * 0.5 - A * Ch / 100
+            optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, update, a_3, b_3, db_3)
+            print(a_1, b_1, db_1, a_2, b_2, db_2, a_3, b_3, db_3, update)
+            print('--------------------------------------------------')
+
+        else:
+            optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, update)
+            print(a_1, b_1, db_1, a_2, b_2, db_2, update)
+            print('----------------------------------')
+
         A += Step
-        print(a_1, b_1, 30, a_2, b_2, 30)
+        update+=1
     cst.interface.DesignEnvironment.close(mycst)
 
+A = float(input('Целевая частота: '))
+B = float(input('Конечная частота: '))
+F1 = float(input('Процент полосы пропускания (10): '))
+F2 = float(input('Процент полосы заграждения (10): '))
+Ch = float(input('Отступ от целевой (12): '))
+Step = float(input('Шаг: '))
+db_1 = float(input('db_1: '))
+db_2 = float(input('db_2: '))
+F3, Ch_2, db_3 = '-', '-', '-'
+if topology == 3:
+    F3 = float(input('Процент полосы заграждения два (10): '))
+    Ch_2 = float(input('Отступ от целевой два (12): '))
+    db_3 = float(input('db_3: '))
 
-#optim(1001, 1101, 30, 1201, 1301, 30)
-Solve(A, B, F1, F2, Ch, Step)
+Solve(A, B, F1, F2, F3, Ch, Ch_2, Step, db_1, db_2, db_3)
+
 
 '''
 a1 = float(input('Values start : '))
