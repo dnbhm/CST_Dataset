@@ -10,7 +10,7 @@ import pandas as pd
 import csv
 from datetime import datetime
 
-File = 'Topology_1.cst'   #Имя проекта
+File = 'Topology_3.cst'   #Имя проекта
 
 
 topology = int(File.split('.')[0].split('_')[1])
@@ -22,7 +22,7 @@ par_change = 'Sub Main () \nStoreParameter("W3_1", 2.4)\nStoreParameter("S3_1",2
              '\nEnd Sub'
 mycst1.schematic.execute_vba_code(par_change, timeout=None)
 '''
-
+'''
 def save_S_P(s1, s2, s3, s4, s5, s6, s7, s8, name_f):
     s = [s1, s2, s3, s4, s5, s6, s7, s8]
     try:
@@ -32,7 +32,7 @@ def save_S_P(s1, s2, s3, s4, s5, s6, s7, s8, name_f):
                 file.write(mm + '\n\n\n\n\n\n\n')
         print(f"S-Parameters have been successfully saved to a file: {name_f}")
     except Exception as e:
-        print(f"An error occurred when writing to a file: {e}")
+        print(f"An error occurred when writing to a file: {e}") '''
 
 def write_to_csv(filename, name_project, a, b, db_1, a_2, b_2, db_2, a_3, b_3, db_3, data_list, name_2, name_1):
     file_exists = False
@@ -55,7 +55,7 @@ def write_to_csv(filename, name_project, a, b, db_1, a_2, b_2, db_2, a_3, b_3, d
                              'Lp (millimetre)', 'Ls (millimetre)', 'Rgnd (millimetre)', 'Rp (millimetre)',
                              'S1_1 (millimetre)', 'S2_1 (millimetre)', 'S3_1 (millimetre)', 'T (millimetre)',
                              'W1_1 (millimetre)', 'W2_1 (millimetre)', 'W3_1 (millimetre)', 'Wp (millimetre)',
-                             'The path to the S-parameters file', 'The path to the file'])
+                             'The path to the Touchstone', 'The path to the file'])
         rounded_list = map(lambda x: round(x, 3), data_list)
         list1 = map(str, rounded_list)
         writer.writerow([name_project, datetime.now(),name_project.split('.')[0], a, b, a_2, b_2, a_3, b_3, db_1, db_2, db_3, ','.join(list1), name_2, name_1])
@@ -127,7 +127,16 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, i, a_3 = '-', b_3 = '-', db_3 
     res_filename = File + '_' + str(a_1) + '_' + str(b_1)
 
     #txt_headers = ['S11_y', 'S11_x', 'S12_y', 'S12_x', 'S21_y', 'S21_x', 'S22_y', 'S22_x']
-    save_S_P(S11_y, S11_x, S12_y, S12_x, S21_y, S21_x, S22_y, S22_x, res_filename)
+    ###save_S_P(S11_y, S11_x, S12_y, S12_x, S21_y, S21_x, S22_y, S22_x, res_filename)
+    par_opt_impr = 'Sub Main ()' \
+    '\n TOUCHSTONE.Reset' \
+    '\n TOUCHSTONE.FileName("'+ res_filename +'_S_param'+'")' \
+    '\n TOUCHSTONE.ExportType ("S")' \
+    '\n TOUCHSTONE.Format ("MA")' \
+    '\n TOUCHSTONE.FrequencyRange("Full")'\
+    '\n TOUCHSTONE.Write' \
+    '\n End Sub'
+    mycst1.schematic.execute_vba_code(par_opt_impr, timeout=None)
 
    #Parameters schematic------------------------------------------------------------------------------
     res_fileparam = 'param_' + res_filename
@@ -136,17 +145,17 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, i, a_3 = '-', b_3 = '-', db_3 
     r = pd.DataFrame(data = list(schematic.get_parameter_combination(0).items()), columns = ['Name','Values'])
     r.set_index('Name', inplace=True)
 
-    write_to_csv(File[:-6] + '.csv', File, str(a_1) , str(b_1), str(db_1), str(a_2), str(b_2), str(db_2), str(a_3), str(b_3), str(db_3), list(schematic.get_parameter_combination(0).values()), os.path.abspath(res_filename), os.path.abspath(File))
+    write_to_csv(File[:-6] + '.csv', File, str(a_1) , str(b_1), str(db_1), str(a_2), str(b_2), str(db_2), str(a_3), str(b_3), str(db_3), list(schematic.get_parameter_combination(0).values()), res_filename +'_S_param', os.path.abspath(File))
     print("Update CVS file")
     return 'good'
-
-#New
 
 def Solve(A, B, F1, F2, F3, Ch, Ch_2, Step, db_1, db_2, db_3):
     update = 10  # скорость обновления ограничений физ параметров
     mycst = cst.interface.DesignEnvironment()
     mycst1 = cst.interface.DesignEnvironment.open_project(mycst, r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\' + str(File))  # Поменять путь к проекту CST
     while (B - A):
+        if (B - A) < 0:
+            break
         a_1 = A - A * F1/100 * 0.5
         b_1 = A + A * F1/100 * 0.5
         a_2 = A - A * F2 / 100 * 0.5 + A * Ch/100
@@ -155,12 +164,12 @@ def Solve(A, B, F1, F2, F3, Ch, Ch_2, Step, db_1, db_2, db_3):
             a_3 = A - A * F3 / 100 * 0.5 - A * Ch_2/100
             b_3 = A + A * F2 / 100 * 0.5 - A * Ch / 100
             optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, update, a_3, b_3, db_3)
-            print(a_1, b_1, db_1, a_2, b_2, db_2, a_3, b_3, db_3, update)
+            #print(a_1, b_1, db_1, a_2, b_2, db_2, a_3, b_3, db_3, update)
             print('--------------------------------------------------')
 
         else:
             optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, update)
-            print(a_1, b_1, db_1, a_2, b_2, db_2, update)
+            #print(a_1, b_1, db_1, a_2, b_2, db_2, update)
             print('----------------------------------')
 
         A += Step
