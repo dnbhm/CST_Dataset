@@ -11,28 +11,7 @@ import csv
 from datetime import datetime
 
 File = 'Topology_3.cst'   #Имя проекта
-
-
 topology = int(File.split('.')[0].split('_')[1])
-
-''' #Изменение Parameter list------------------------------------------------------------------------------
-par_change = 'Sub Main () \nStoreParameter("W3_1", 2.4)\nStoreParameter("S3_1",2)' \
-             '\nRebuildOnParametricChange (bfullRebuild, bShowErrorMsgBox)' \
-             '\nStoreParameter("L3", 3)' \
-             '\nEnd Sub'
-mycst1.schematic.execute_vba_code(par_change, timeout=None)
-'''
-'''
-def save_S_P(s1, s2, s3, s4, s5, s6, s7, s8, name_f):
-    s = [s1, s2, s3, s4, s5, s6, s7, s8]
-    try:
-        with open(name_f, 'w', encoding='utf-8') as file:
-            for s_1 in s:
-                mm = ','.join(map(str, s_1))
-                file.write(mm + '\n\n\n\n\n\n\n')
-        print(f"S-Parameters have been successfully saved to a file: {name_f}")
-    except Exception as e:
-        print(f"An error occurred when writing to a file: {e}") '''
 
 def write_to_csv(filename, name_project, a, b, db_1, a_2, b_2, db_2, a_3, b_3, db_3, data_list, name_2, name_1):
     file_exists = False
@@ -110,20 +89,6 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, i, a_3 = '-', b_3 = '-', db_3 
     mycst1.schematic.execute_vba_code(par_opt_start, timeout=None)
     resultFile = cst.results.ProjectFile(r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\' +str(File), allow_interactive=True)
 
-    #S-Parameters schematic------------------------------------------------------------------------------
-    S11 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
-    S12 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S1,2")
-    S21 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S2,1")
-    S22 = resultFile.get_3d().get_result_item(r"1D Results\S-Parameters\S2,2")
-
-    S11_y = S11.get_ydata()
-    S11_x = S11.get_xdata()
-    S12_y = S12.get_ydata()
-    S12_x = S12.get_xdata()
-    S21_y = S21.get_ydata()
-    S21_x = S21.get_xdata()
-    S22_y = S22.get_ydata()
-    S22_x = S22.get_xdata()
     res_filename = File + '_' + str(a_1) + '_' + str(b_1)
 
     #txt_headers = ['S11_y', 'S11_x', 'S12_y', 'S12_x', 'S21_y', 'S21_x', 'S22_y', 'S22_x']
@@ -162,14 +127,12 @@ def Solve(A, B, F1, F2, F3, Ch, Ch_2, Step, db_1, db_2, db_3):
         b_2 = A + A * F2 / 100 * 0.5 + A * Ch/100
         if topology == 3:
             a_3 = A - A * F3 / 100 * 0.5 - A * Ch_2/100
-            b_3 = A + A * F2 / 100 * 0.5 - A * Ch / 100
+            b_3 = A + A * F3 / 100 * 0.5 - A * Ch_2 / 100
             optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, update, a_3, b_3, db_3)
-            #print(a_1, b_1, db_1, a_2, b_2, db_2, a_3, b_3, db_3, update)
             print('--------------------------------------------------')
 
         else:
             optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, update)
-            #print(a_1, b_1, db_1, a_2, b_2, db_2, update)
             print('----------------------------------')
 
         A += Step
@@ -192,47 +155,5 @@ if topology == 3:
 
 Solve(A, B, F1, F2, F3, Ch, Ch_2, Step, db_1, db_2, db_3)
 
-
-'''
-a1 = float(input('Values start : '))
-b1 = float(input('Values end : '))
-c1 = float(input('Change : '))
-if topology == 3:
-    c2 = float(input('-Change_2 : '))
-step = float(input('Step : '))
-wind = float(input('Range : '))
-db_1 = float(input('Values_1 dB: '))
-db_2 = float(input('Values_2 dB: '))
-if topology == 3:
-    db_3 = float(input('Values_3 dB: '))
-
-#solv(MIN Первой цели, MAX Первой цели, отступ Второй цели, ШАГ,  Размер окна)
-def solv(a1, b1, c1, step_1, wind, c2=0):
-    j = 0
-    if c2:
-        for i in np.arange(a1, b1, step_1):
-            min_1 = round(i,3) + step_1*j
-            max_1 = round(i,3) + wind + step_1*j
-            min_2 = round(i,3) + wind + c1 + step_1*j
-            max_2 = round(i,3) + wind*2 + c1 + step_1*j
-            min_3 = round(i,3) - wind - c2 + step_1*j
-            max_3 = round(i,3) - c2 + step_1*j
-            j+=1
-            optim(min_1, max_1, min_2, max_2, min_3, max_3)
-    else:
-        for i in np.arange(a1, b1, step_1):
-            min_1 = round(i,3) + step_1*j
-            max_1 = round(i,3) + wind + step_1*j
-            min_2 = round(i,3) + wind + c1 + step_1*j
-            max_2 = round(i,3) + wind*2 +c1 + step_1*j
-            j += 1
-            print(min_1, max_1, min_2, max_2)
-            optim(min_1, max_1, min_2, max_2)
-
-if topology == 3:
-    solv(a1, b1, c1, step, wind,c2)
-else:
-    solv(a1, b1, c1, step, wind)
-'''
 
 
