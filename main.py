@@ -10,11 +10,33 @@ import pandas as pd
 import csv
 from datetime import datetime
 
-ResultPath = r'C:\\CST\\Dataset\\'  # Путь до файла проекта и для сохранения TOUCHSTONE
+ResultPath = r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\'  # Путь до файла проекта и для сохранения TOUCHSTONE
 
-File = 'Topology_3.cst'  # Имя проекта
+# Topology_1 - полоса заграждения выше по частоте, Topology_2 - ниже по частоте, Topology_3 - симметрично;
+
+File = 'Topology_1.cst'  # Имя проекта
 
 topology = int(File.split('.')[0].split('_')[1])
+
+''' #Изменение Parameter list------------------------------------------------------------------------------
+par_change = 'Sub Main () \nStoreParameter("W3_1", 2.4)\nStoreParameter("S3_1",2)' \
+             '\nRebuildOnParametricChange (bfullRebuild, bShowErrorMsgBox)' \
+             '\nStoreParameter("L3", 3)' \
+             '\nEnd Sub'
+mycst1.schematic.execute_vba_code(par_change, timeout=None)
+'''
+'''
+def save_S_P(s1, s2, s3, s4, s5, s6, s7, s8, name_f):
+    s = [s1, s2, s3, s4, s5, s6, s7, s8]
+    try:
+        with open(name_f, 'w', encoding='utf-8') as file:
+            for s_1 in s:
+                mm = ','.join(map(str, s_1))
+                file.write(mm + '\n\n\n\n\n\n\n')
+        print(f"S-Parameters have been successfully saved to a file: {name_f}")
+    except Exception as e:
+        print(f"An error occurred when writing to a file: {e}") '''
+
 
 def write_to_csv(filename, name_project, a, b, db_1, a_2, b_2, db_2, a_3, b_3, db_3, data_list, name_2, name_1):
     file_exists = False
@@ -32,37 +54,46 @@ def write_to_csv(filename, name_project, a, b, db_1, a_2, b_2, db_2, a_3, b_3, d
                              'Frequency start_2 (Mhz)', 'Frequency end_2 (Mhz)',
                              'Frequency start_3 (Mhz)', 'Frequency end_3 (Mhz)',
                              'attenuation level in the passband (dB)', 'attenuation level in the stopband (dB)',
-                             'attenuation level in the stopband_2 (dB)', 'H (millimetre)', 'HH (millimetre)',
-                             'L1 (millimetre)', 'L11 (millimetre)', 'L2 (millimetre)', 'L3 (millimetre)',
-                             'Lp (millimetre)', 'Ls (millimetre)', 'Rgnd (millimetre)', 'Rp (millimetre)',
-                             'S1_1 (millimetre)', 'S2_1 (millimetre)', 'S3_1 (millimetre)', 'T (millimetre)',
-                             'W1_1 (millimetre)', 'W2_1 (millimetre)', 'W3_1 (millimetre)', 'Wp (millimetre)',
+                             'attenuation level in the stopband_2 (dB)', 'H (mm)', 'HH (mm)',
+                             'L1 (mm)', 'L11 (mm)', 'L2 (mm)', 'L3 (mm)',
+                             'Lp (mm)', 'Ls (mm)', 'Rgnd (mm)', 'Rp (mm)',
+                             'S1_1 (mm)', 'S2_1 (mm)', 'S3_1 (mm)', 'T (mm)',
+                             'W1_1 (mm)', 'W2_1 (mm)', 'W3_1 (mm)', 'Wp (mm)',
                              'The path to the Touchstone', 'The path to the file'])
         rounded_list = map(lambda x: round(x, 3), data_list)
         list1 = map(str, rounded_list)
-        writer.writerow(
-            [name_project, datetime.now(), name_project.split('.')[0], a, b, a_2, b_2, a_3, b_3, db_1, db_2, db_3,','.join(list1), name_2, name_1])
+        writer.writerow([name_project, datetime.now(), name_project.split('.')[0], a, b, a_2, b_2, a_3, b_3, db_1, db_2, db_3, ','.join(list1), name_2, name_1])
 
 
 def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3='-'):
     par_opt_1 = 'Sub Main () \n Optimizer.DeleteAllGoals \n Dim goalID As Long \n goalID = Optimizer.AddGoal("1DC Primary Result")' \
                 '\n  Optimizer.SetAndUpdateMinMaxAuto (' + str(delta) + ')' \
                 '\n  Optimizer.SelectParameter ("L1", True)' \
+                '\n  Optimizer.SetParameterMin ('+ str(L_min) +')' \
                 '\n  Optimizer.SelectParameter ("L2", True)' \
+                '\n  Optimizer.SetParameterMin ('+ str(L_min) +')' \
                 '\n  Optimizer.SelectParameter ("L3", True)' \
+                '\n  Optimizer.SetParameterMin ('+ str(L_min) +')' \
                 '\n  Optimizer.SelectParameter ("L11", True)' \
+                '\n  Optimizer.SetParameterMin ('+ str(L_min) +')' \
                 '\n  Optimizer.SelectParameter ("S1_1", True)' \
+                '\n  Optimizer.SetParameterMin ('+ str(S_min) +')' \
                 '\n  Optimizer.SelectParameter ("S2_1", True)' \
+                '\n  Optimizer.SetParameterMin ('+ str(S_min) +')' \
                 '\n  Optimizer.SelectParameter ("S3_1", True)' \
+                '\n  Optimizer.SetParameterMin ('+ str(S_min) +')' \
                 '\n  Optimizer.SelectParameter ("W1_1", True)' \
+                '\n  Optimizer.SetParameterMin ('+ str(W_min) +')' \
                 '\n  Optimizer.SelectParameter ("W2_1", True)' \
+                '\n  Optimizer.SetParameterMin ('+ str(W_min) +')' \
                 '\n  Optimizer.SelectParameter ("W3_1", True)' \
+                '\n  Optimizer.SetParameterMin ('+ str(W_min) +')' \
                 '\n  Optimizer.SelectGoal (goalID, True)' \
                 '\n  Optimizer.SetGoal1DCResultName(".\S-Parameters\S1,1")' \
                 '\n  Optimizer.SetGoalScalarType("magdB20")' \
                 '\n  Optimizer.SetGoalOperator ("<")' \
                 '\n  Optimizer.SetGoalTarget (' + str(db_1) + ')' \
-                '\n  Optimizer.SetGoalWeight (1.0)' \
+                '\n  Optimizer.SetGoalWeight (4.0)' \
                 '\n  Optimizer.SetGoalRangeType ("range")' \
                 '\n  Optimizer.SetGoalRange (' + str(a_1) + ', ' + str(b_1) + ')' \
                 '\nEnd Sub'
@@ -75,7 +106,7 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
                 '\n  Optimizer.SetGoalWeight (1.0)' \
                 '\n  Optimizer.SetGoalRangeType ("range")' \
                 '\n  Optimizer.SetGoalRange (' + str(a_2) + ', ' + str(b_2) + ')' \
-                '\nEnd Sub'
+               '\nEnd Sub'
 
     mycst1.schematic.execute_vba_code(par_opt_1, timeout=None)
     mycst1.schematic.execute_vba_code(par_opt_2, timeout=None)
@@ -102,6 +133,8 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
 
     res_filename = File + '_' + str(a_1) + '_' + str(b_1)
 
+    # txt_headers = ['S11_y', 'S11_x', 'S12_y', 'S12_x', 'S21_y', 'S21_x', 'S22_y', 'S22_x']
+    ###save_S_P(S11_y, S11_x, S12_y, S12_x, S21_y, S21_x, S22_y, S22_x, res_filename)
     par_opt_impr = 'Sub Main ()' \
                    '\n TOUCHSTONE.Reset' \
                    '\n TOUCHSTONE.FileName("' + ResultPath + res_filename + '_S_param' + '")' \
@@ -116,10 +149,8 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
     res_fileparam = 'param_' + res_filename
     schematic = resultFile.get_schematic()
     schematic.get_all_run_ids()
-    r = pd.DataFrame(data=list(schematic.get_parameter_combination(0).items()), columns=['Name', 'Values'])
-    r.set_index('Name', inplace=True)
 
-    write_to_csv(File[:-6] + '.csv', File, str(a_1), str(b_1), str(db_1), str(a_2), str(b_2), str(db_2), str(a_3), str(b_3), str(db_3), list(schematic.get_parameter_combination(0).values()), ResultPath + res_filename + '_S_param', ResultPath + File)
+    write_to_csv(File[:-6] + '.csv', File, str(a_1), str(b_1), str(db_1), str(a_2), str(b_2), str(db_2), str(a_3),str(b_3), str(db_3), list(schematic.get_parameter_combination(0).values()),ResultPath + res_filename + '_S_param', ResultPath + File)
     print("Update CSV file")
     return 'good'
 
@@ -140,10 +171,12 @@ def Solve(A, B, F1, F2, F3, Ch, Ch_2, Step, db_1, db_2, db_3):
             a_3 = A - A * F3 / 100 * 0.5 - A * Ch_2 / 100
             b_3 = A + A * F3 / 100 * 0.5 - A * Ch_2 / 100
             optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3, b_3, db_3)
+            # print(a_1, b_1, db_1, a_2, b_2, db_2, a_3, b_3, db_3, update, delta)
             print('--------------------------------------------------')
 
         else:
             optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta)
+            # print(a_1, b_1, db_1, a_2, b_2, db_2, update, delta)
             print('----------------------------------')
 
         A += Step
@@ -164,11 +197,8 @@ if topology == 3:
     F3 = float(input('Процент полосы заграждения два (10): '))
     Ch_2 = float(input('Процент отступа от центральной частоты до нижней полосы заграждения (20): '))
     db_3 = float(input('Уровень затухания в нижней полосе заграждения (дБ): '))
+L_min = float(input('Нижнее ограничение физических параметров - длин фильтра (L1, L2, L3, L11): '))
+W_min = float(input('Нижнее ограничение физических параметров - ширины фильтра (W1, W2, W3): '))
+S_min = float(input('Нижнее ограничение физических параметров - расстояние между связнными линиями фильтра (S1_1, S2_1, S3_1): '))
 
 Solve(A, B, F1, F2, F3, Ch, Ch_2, Step, db_1, db_2, db_3)
-
-
-
-
-
-
