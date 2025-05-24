@@ -75,7 +75,7 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
                 '\n  Optimizer.SelectParameter ("L3", True)' \
                 '\n  Optimizer.SetParameterMin ('+ str(L_min) +')' \
                 '\n  Optimizer.SelectParameter ("L11", True)' \
-                '\n  Optimizer.SetParameterMin ('+ str(L_min) +')' \
+                '\n  Optimizer.SetParameterMin ('+ str(W_min) +')' \
                 '\n  Optimizer.SelectParameter ("S1_1", True)' \
                 '\n  Optimizer.SetParameterMin ('+ str(S_min) +')' \
                 '\n  Optimizer.SelectParameter ("S2_1", True)' \
@@ -106,7 +106,7 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
                 '\n  Optimizer.SetGoalWeight (1.0)' \
                 '\n  Optimizer.SetGoalRangeType ("range")' \
                 '\n  Optimizer.SetGoalRange (' + str(a_2) + ', ' + str(b_2) + ')' \
-               '\nEnd Sub'
+                '\nEnd Sub'
 
     mycst1.schematic.execute_vba_code(par_opt_1, timeout=None)
     mycst1.schematic.execute_vba_code(par_opt_2, timeout=None)
@@ -197,8 +197,8 @@ if topology == 3:
     F3 = float(input('Процент полосы заграждения два (10): '))
     Ch_2 = float(input('Процент отступа от центральной частоты до нижней полосы заграждения (20): '))
     db_3 = float(input('Уровень затухания в нижней полосе заграждения (дБ): '))
-L_min = float(input('Нижнее ограничение физических параметров - длин фильтра (L1, L2, L3, L11): '))
-W_min = float(input('Нижнее ограничение физических параметров - ширины фильтра (W1, W2, W3): '))
+L_min = float(input('Нижнее ограничение физических параметров - длин фильтра (L1, L2, L3): '))
+W_min = float(input('Нижнее ограничение физических параметров - ширины фильтра (W1, W2, W3, L11): '))
 S_min = float(input('Нижнее ограничение физических параметров - расстояние между связнными линиями фильтра (S1_1, S2_1, S3_1): '))
 
 Solve(A, B, F1, F2, F3, Ch, Ch_2, Step, db_1, db_2, db_3)
