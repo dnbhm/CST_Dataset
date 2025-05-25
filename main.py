@@ -64,40 +64,72 @@ def write_to_csv(filename, name_project, a, b, db_1, a_2, b_2, db_2, a_3, b_3, d
         list1 = map(str, rounded_list)
         writer.writerow([name_project, datetime.now(), name_project.split('.')[0], a, b, a_2, b_2, a_3, b_3, db_1, db_2, db_3, ','.join(list1), name_2, name_1])
 
+'''
+def change_par(mycst1, name, values):
+    par_opt_1_1 = 'Optimizer.SelectParameter ("' + str(name) + '", True)' \
+                  '\n Optimizer.SetParameterMin (' + str(values) + ')' \
+                  '\nEnd Sub'
+    mycst1.schematic.execute_vba_code(par_opt_1_1, timeout=None)
+
+
+def apply_change_par(mycst1, df, par_name, MIN):
+    mask = (df['Name'].isin(par_name)) & (df['Values'] < MIN)
+    for name in df.loc[mask, 'Name']:
+        print(name)
+        change_par(mycst1, MIN, name)'''
 
 def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3='-'):
+    resultFile = cst.results.ProjectFile(ResultPath + str(File), allow_interactive=True)
+    schematic = resultFile.get_schematic()
+    r = pd.DataFrame(data=list(schematic.get_parameter_combination(0).items()), columns=['Name', 'Values'])
+    print('Проверка на минимальное значение физических параметров')
+    #apply_change_par(mycst1, r, ['L1', 'L2', 'L3'], L_min)
+
+    L1 = L_min if (r[r['Name']=='L1']['Values']).any() < L_min else r[r['Name']=='L1']['Values']
+    L2 = L_min if (r[r['Name']=='L2']['Values']).any() < L_min else r[r['Name']=='L2']['Values']
+    L3 = L_min if (r[r['Name']=='L3']['Values']).any() < L_min else r[r['Name']=='L3']['Values']
+    L11 = W_min if (r[r['Name']=='L11']['Values']).any() < W_min else r[r['Name']=='L11']['Values']
+    S1_1 = S_min if (r[r['Name']=='S1_1']['Values']).any() < S_min else r[r['Name']=='S1_1']['Values']
+    S2_1 = S_min if (r[r['Name']=='S2_1']['Values']).any() < S_min else r[r['Name']=='S2_1']['Values']
+    S3_1 = S_min if (r[r['Name']=='S3_1']['Values']).any() < S_min else r[r['Name']=='S3_1']['Values']
+    W1_1 = W_min if (r[r['Name']=='W1_1']['Values']).any() < W_min else r[r['Name']=='W1_1']['Values']
+    W2_1 = W_min if (r[r['Name']=='W2_1']['Values']).any() < W_min else r[r['Name']=='W2_1']['Values']
+    W3_1 = W_min if (r[r['Name']=='W3_1']['Values']).any() < W_min else r[r['Name']=='W3_1']['Values']
+
     par_opt_1 = 'Sub Main () \n Optimizer.DeleteAllGoals \n Dim goalID As Long \n goalID = Optimizer.AddGoal("1DC Primary Result")' \
                 '\n  Optimizer.SetAndUpdateMinMaxAuto (' + str(delta) + ')' \
                 '\n  Optimizer.SelectParameter ("L1", True)' \
-                '\n  Optimizer.SetParameterMin ('+ str(L_min) +')' \
+                '\n  Optimizer.SetParameterMin (' + str(L1) + ')' \
                 '\n  Optimizer.SelectParameter ("L2", True)' \
-                '\n  Optimizer.SetParameterMin ('+ str(L_min) +')' \
+                '\n  Optimizer.SetParameterMin (' + str(L2) + ')' \
                 '\n  Optimizer.SelectParameter ("L3", True)' \
-                '\n  Optimizer.SetParameterMin ('+ str(L_min) +')' \
+                '\n  Optimizer.SetParameterMin (' + str(L3) + ')' \
                 '\n  Optimizer.SelectParameter ("L11", True)' \
-                '\n  Optimizer.SetParameterMin ('+ str(W_min) +')' \
+                '\n  Optimizer.SetParameterMin (' + str(L11) + ')' \
                 '\n  Optimizer.SelectParameter ("S1_1", True)' \
-                '\n  Optimizer.SetParameterMin ('+ str(S_min) +')' \
+                '\n  Optimizer.SetParameterMin (' + str(S1_1) + ')' \
                 '\n  Optimizer.SelectParameter ("S2_1", True)' \
-                '\n  Optimizer.SetParameterMin ('+ str(S_min) +')' \
+                '\n  Optimizer.SetParameterMin (' + str(S2_1) + ')' \
                 '\n  Optimizer.SelectParameter ("S3_1", True)' \
-                '\n  Optimizer.SetParameterMin ('+ str(S_min) +')' \
+                '\n  Optimizer.SetParameterMin (' + str(S3_1) + ')' \
                 '\n  Optimizer.SelectParameter ("W1_1", True)' \
-                '\n  Optimizer.SetParameterMin ('+ str(W_min) +')' \
+                '\n  Optimizer.SetParameterMin (' + str(W1_1) + ')' \
                 '\n  Optimizer.SelectParameter ("W2_1", True)' \
-                '\n  Optimizer.SetParameterMin ('+ str(W_min) +')' \
+                '\n  Optimizer.SetParameterMin (' + str(W2_1) + ')' \
                 '\n  Optimizer.SelectParameter ("W3_1", True)' \
-                '\n  Optimizer.SetParameterMin ('+ str(W_min) +')' \
-                '\n  Optimizer.SelectGoal (goalID, True)' \
-                '\n  Optimizer.SetGoal1DCResultName(".\S-Parameters\S1,1")' \
-                '\n  Optimizer.SetGoalScalarType("magdB20")' \
-                '\n  Optimizer.SetGoalOperator ("<")' \
-                '\n  Optimizer.SetGoalTarget (' + str(db_1) + ')' \
-                '\n  Optimizer.SetGoalWeight (4.0)' \
-                '\n  Optimizer.SetGoalRangeType ("range")' \
-                '\n  Optimizer.SetGoalRange (' + str(a_1) + ', ' + str(b_1) + ')' \
-                '\nEnd Sub'
-    par_opt_2 = 'Sub Main () \n Dim goalID As Long \n goalID = Optimizer.AddGoal("1DC Primary Result")' \
+                '\n  Optimizer.SetParameterMin (' + str(W3_1) + ')' \
+                 '\n  Optimizer.SelectGoal (goalID, True)' \
+                 '\n  Optimizer.SetGoal1DCResultName(".\S-Parameters\S1,1")' \
+                 '\n  Optimizer.SetGoalScalarType("magdB20")' \
+                 '\n  Optimizer.SetGoalOperator ("<")' \
+                 '\n  Optimizer.SetGoalTarget (' + str(db_1) + ')' \
+                 '\n  Optimizer.SetGoalWeight (4.0)' \
+                 '\n  Optimizer.SetGoalRangeType ("range")' \
+                 '\n  Optimizer.SetGoalRange (' + str(a_1) + ', ' + str(b_1) + ')' \
+                 '\nEnd Sub'
+    mycst1.schematic.execute_vba_code(par_opt_1, timeout=None)
+
+    par_opt_end = 'Sub Main () \n Dim goalID As Long \n goalID = Optimizer.AddGoal("1DC Primary Result")' \
                 '\n  Optimizer.SelectGoal (goalID, True)' \
                 '\n  Optimizer.SetGoal1DCResultName(".\S-Parameters\S2,1")' \
                 '\n  Optimizer.SetGoalScalarType("magdB20")' \
@@ -108,8 +140,7 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
                 '\n  Optimizer.SetGoalRange (' + str(a_2) + ', ' + str(b_2) + ')' \
                 '\nEnd Sub'
 
-    mycst1.schematic.execute_vba_code(par_opt_1, timeout=None)
-    mycst1.schematic.execute_vba_code(par_opt_2, timeout=None)
+    mycst1.schematic.execute_vba_code(par_opt_end, timeout=None)
     if topology == 3:
         par_opt_3 = 'Sub Main () \n Dim goalID As Long \n goalID = Optimizer.AddGoal("1DC Primary Result")' \
                     '\n  Optimizer.SelectGoal (goalID, True)' \
@@ -123,12 +154,12 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
                     '\nEnd Sub'
         mycst1.schematic.execute_vba_code(par_opt_3, timeout=None)
 
-    mycst1.model3d.run_solver()
+    #mycst1.model3d.run_solver()
 
     par_opt_start = 'Sub Main ()' \
                     '\n  Optimizer.Start' \
                     '\nEnd Sub'
-    mycst1.schematic.execute_vba_code(par_opt_start, timeout=None)
+    #mycst1.schematic.execute_vba_code(par_opt_start, timeout=None)
     resultFile = cst.results.ProjectFile(ResultPath + str(File), allow_interactive=True)
 
     res_filename = File + '_' + str(a_1) + '_' + str(b_1)
@@ -143,7 +174,7 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
                    '\n TOUCHSTONE.FrequencyRange("Full")' \
                    '\n TOUCHSTONE.Write' \
                    '\n End Sub'
-    mycst1.schematic.execute_vba_code(par_opt_impr, timeout=None)
+    #mycst1.schematic.execute_vba_code(par_opt_impr, timeout=None)
 
     # Parameters schematic------------------------------------------------------------------------------
     res_fileparam = 'param_' + res_filename
