@@ -14,7 +14,7 @@ ResultPath = r'C:\\Users\\Danil\\Downloads\\Telegram Desktop\\'  # Путь до
 
 # Topology_1 - полоса заграждения выше по частоте, Topology_2 - ниже по частоте, Topology_3 - симметрично;
 
-File = 'Topology_1.cst'  # Имя проекта
+File = 'Topology_3.cst'  # Имя проекта
 
 topology = int(File.split('.')[0].split('_')[1])
 
@@ -84,17 +84,19 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
     r = pd.DataFrame(data=list(schematic.get_parameter_combination(0).items()), columns=['Name', 'Values'])
     print('Проверка на минимальное значение физических параметров')
     #apply_change_par(mycst1, r, ['L1', 'L2', 'L3'], L_min)
+    print(r.loc[r['Name']=='L1', 'Values'].iloc[0])
+    print(L_min if (r[r['Name']=='L1']['Values']).any() < L_min else r.loc[r['Name']=='L1', 'Values'].iloc[0])
 
-    L1 = L_min if (r[r['Name']=='L1']['Values']).any() < L_min else r[r['Name']=='L1']['Values']
-    L2 = L_min if (r[r['Name']=='L2']['Values']).any() < L_min else r[r['Name']=='L2']['Values']
-    L3 = L_min if (r[r['Name']=='L3']['Values']).any() < L_min else r[r['Name']=='L3']['Values']
-    L11 = W_min if (r[r['Name']=='L11']['Values']).any() < W_min else r[r['Name']=='L11']['Values']
-    S1_1 = S_min if (r[r['Name']=='S1_1']['Values']).any() < S_min else r[r['Name']=='S1_1']['Values']
-    S2_1 = S_min if (r[r['Name']=='S2_1']['Values']).any() < S_min else r[r['Name']=='S2_1']['Values']
-    S3_1 = S_min if (r[r['Name']=='S3_1']['Values']).any() < S_min else r[r['Name']=='S3_1']['Values']
-    W1_1 = W_min if (r[r['Name']=='W1_1']['Values']).any() < W_min else r[r['Name']=='W1_1']['Values']
-    W2_1 = W_min if (r[r['Name']=='W2_1']['Values']).any() < W_min else r[r['Name']=='W2_1']['Values']
-    W3_1 = W_min if (r[r['Name']=='W3_1']['Values']).any() < W_min else r[r['Name']=='W3_1']['Values']
+    L1 = L_min if (r[r['Name']=='L1']['Values']).any() < L_min else r.loc[r['Name']=='L1', 'Values'].iloc[0]
+    L2 = L_min if (r[r['Name']=='L2']['Values']).any() < L_min else r.loc[r['Name']=='L2', 'Values'].iloc[0]
+    L3 = L_min if (r[r['Name']=='L3']['Values']).any() < L_min else r.loc[r['Name']=='L3', 'Values'].iloc[0]
+    L11 = W_min if (r[r['Name']=='L11']['Values']).any() < W_min else r.loc[r['Name']=='L11', 'Values'].iloc[0]
+    S1_1 = S_min if (r[r['Name']=='S1_1']['Values']).any() < S_min else r.loc[r['Name']=='S1_1', 'Values'].iloc[0]
+    S2_1 = S_min if (r[r['Name']=='S2_1']['Values']).any() < S_min else r.loc[r['Name']=='S2_1', 'Values'].iloc[0]
+    S3_1 = S_min if (r[r['Name']=='S3_1']['Values']).any() < S_min else r.loc[r['Name']=='S3_1', 'Values'].iloc[0]
+    W1_1 = W_min if (r[r['Name']=='W1_1']['Values']).any() < W_min else r.loc[r['Name']=='W1_1', 'Values'].iloc[0]
+    W2_1 = W_min if (r[r['Name']=='W2_1']['Values']).any() < W_min else r.loc[r['Name']=='W2_1', 'Values'].iloc[0]
+    W3_1 = W_min if (r[r['Name']=='W3_1']['Values']).any() < W_min else r.loc[r['Name']=='W3_1', 'Values'].iloc[0]
 
     par_opt_1 = 'Sub Main () \n Optimizer.DeleteAllGoals \n Dim goalID As Long \n goalID = Optimizer.AddGoal("1DC Primary Result")' \
                 '\n  Optimizer.SetAndUpdateMinMaxAuto (' + str(delta) + ')' \
@@ -118,6 +120,7 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
                 '\n  Optimizer.SetParameterMin (' + str(W2_1) + ')' \
                 '\n  Optimizer.SelectParameter ("W3_1", True)' \
                 '\n  Optimizer.SetParameterMin (' + str(W3_1) + ')' \
+                '\n  Optimizer.SetAndUpdateMinMaxAuto (' + str(delta) + ')' \
                  '\n  Optimizer.SelectGoal (goalID, True)' \
                  '\n  Optimizer.SetGoal1DCResultName(".\S-Parameters\S1,1")' \
                  '\n  Optimizer.SetGoalScalarType("magdB20")' \
@@ -154,18 +157,16 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
                     '\nEnd Sub'
         mycst1.schematic.execute_vba_code(par_opt_3, timeout=None)
 
-    #mycst1.model3d.run_solver()
+    mycst1.model3d.run_solver()
 
     par_opt_start = 'Sub Main ()' \
                     '\n  Optimizer.Start' \
                     '\nEnd Sub'
-    #mycst1.schematic.execute_vba_code(par_opt_start, timeout=None)
+    mycst1.schematic.execute_vba_code(par_opt_start, timeout=None)
     resultFile = cst.results.ProjectFile(ResultPath + str(File), allow_interactive=True)
 
     res_filename = File + '_' + str(a_1) + '_' + str(b_1)
 
-    # txt_headers = ['S11_y', 'S11_x', 'S12_y', 'S12_x', 'S21_y', 'S21_x', 'S22_y', 'S22_x']
-    ###save_S_P(S11_y, S11_x, S12_y, S12_x, S21_y, S21_x, S22_y, S22_x, res_filename)
     par_opt_impr = 'Sub Main ()' \
                    '\n TOUCHSTONE.Reset' \
                    '\n TOUCHSTONE.FileName("' + ResultPath + res_filename + '_S_param' + '")' \
@@ -174,7 +175,7 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
                    '\n TOUCHSTONE.FrequencyRange("Full")' \
                    '\n TOUCHSTONE.Write' \
                    '\n End Sub'
-    #mycst1.schematic.execute_vba_code(par_opt_impr, timeout=None)
+    mycst1.schematic.execute_vba_code(par_opt_impr, timeout=None)
 
     # Parameters schematic------------------------------------------------------------------------------
     res_fileparam = 'param_' + res_filename
@@ -187,7 +188,7 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
 
 
 def Solve(A, B, F1, F2, F3, Ch, Ch_2, Step, db_1, db_2, db_3):
-    update = 10  # скорость обновления ограничений физ параметров
+    update = 17  # скорость обновления ограничений физ параметров
     mycst = cst.interface.DesignEnvironment()
     mycst1 = cst.interface.DesignEnvironment.open_project(mycst, ResultPath + str(File))
     while (B - A):
