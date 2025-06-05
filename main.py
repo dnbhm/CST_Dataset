@@ -82,10 +82,8 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
     resultFile = cst.results.ProjectFile(ResultPath + str(File), allow_interactive=True)
     schematic = resultFile.get_schematic()
     r = pd.DataFrame(data=list(schematic.get_parameter_combination(0).items()), columns=['Name', 'Values'])
-    print('Проверка на минимальное значение физических параметров')
+    print('Checking for the minimum value of physical parameters')
     #apply_change_par(mycst1, r, ['L1', 'L2', 'L3'], L_min)
-    print(r.loc[r['Name']=='L1', 'Values'].iloc[0])
-    print(L_min if (r[r['Name']=='L1']['Values']).any() < L_min else r.loc[r['Name']=='L1', 'Values'].iloc[0])
 
     L1 = L_min if (r[r['Name']=='L1']['Values']).any() < L_min else r.loc[r['Name']=='L1', 'Values'].iloc[0]
     L2 = L_min if (r[r['Name']=='L2']['Values']).any() < L_min else r.loc[r['Name']=='L2', 'Values'].iloc[0]
@@ -131,7 +129,7 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
                  '\n  Optimizer.SetGoalRange (' + str(a_1) + ', ' + str(b_1) + ')' \
                  '\nEnd Sub'
     mycst1.schematic.execute_vba_code(par_opt_1, timeout=None)
-
+    print('The purpose has been updated')
     par_opt_end = 'Sub Main () \n Dim goalID As Long \n goalID = Optimizer.AddGoal("1DC Primary Result")' \
                 '\n  Optimizer.SelectGoal (goalID, True)' \
                 '\n  Optimizer.SetGoal1DCResultName(".\S-Parameters\S2,1")' \
@@ -162,7 +160,9 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
     par_opt_start = 'Sub Main ()' \
                     '\n  Optimizer.Start' \
                     '\nEnd Sub'
-    mycst1.schematic.execute_vba_code(par_opt_start, timeout=None)
+
+    print('Optimization')
+    #mycst1.schematic.execute_vba_code(par_opt_start, timeout=None)
     resultFile = cst.results.ProjectFile(ResultPath + str(File), allow_interactive=True)
 
     res_filename = File + '_' + str(a_1) + '_' + str(b_1)
@@ -175,6 +175,7 @@ def optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta, a_3='-', b_3='-', db_3=
                    '\n TOUCHSTONE.FrequencyRange("Full")' \
                    '\n TOUCHSTONE.Write' \
                    '\n End Sub'
+    print('saving to a file')
     mycst1.schematic.execute_vba_code(par_opt_impr, timeout=None)
 
     # Parameters schematic------------------------------------------------------------------------------
@@ -209,7 +210,7 @@ def Solve(A, B, F1, F2, F3, Ch, Ch_2, Step, db_1, db_2, db_3):
         else:
             optim(mycst1, a_1, b_1, db_1, a_2, b_2, db_2, delta)
             # print(a_1, b_1, db_1, a_2, b_2, db_2, update, delta)
-            print('----------------------------------')
+            print('--------------------------------------------------')
 
         A += Step
         update += 1
